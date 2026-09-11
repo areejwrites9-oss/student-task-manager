@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
@@ -21,3 +22,6 @@ If you are developing a production application, we recommend using TypeScript wi
 =======
 # react-practice
 >>>>>>> 50e272dc05bb06f446c5523ce9702c876187ff3c
+=======
+
+>>>>>>> ab27ef1aa8789d93ff238126e2e4945c40a2b22a
