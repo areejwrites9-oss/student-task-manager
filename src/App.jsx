@@ -1,311 +1,222 @@
-import React from "react";
+import { useState, useEffect } from "react";
+import "./App.css";
+
+// The address of our backend API
+   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/tasks";
 
 function App() {
-  // =====================================================
-  // 1. VARIABLES
-  // =====================================================
+  const [title, setTitle] = useState("");   // what the user types
+  const [tasks, setTasks] = useState([]);   // tasks that come from MongoDB
+  const [error, setError] = useState("");   // message if something goes wrong
 
-  // var: can be reassigned and redeclared
-  var userName = "John Doe";
-  userName = "Ayesha";
-  var userName = "Areej Fatima";
+  // For editing a task
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
 
-  var Age = 20;
-  console.log("var:", userName);
-  console.log("var:", Age);
+  // ---------- 1. GET: fetch all tasks when the page opens ----------
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
-  // let: can be reassigned but not redeclared in the same scope
-  let age = 20;
-  age = 21;
-  console.log("let:", age);
-
-  // const: cannot be reassigned or redeclared
-  const country = "Pakistan";
-  console.log("const:", country);
-
-  // =====================================================
-  // 2. DATA TYPES
-  // =====================================================
-  const name = "Areej Fatima"; // String
-  const studentAge = 20; // Number
-  const isStudent = true; // Boolean
-  const emptyValue = null; // Null
-  let notAssigned; // Undefined
-
-  console.log("Name:", name);
-  console.log("Age:", studentAge);
-  console.log("Student:", isStudent);
-  console.log("Empty:", emptyValue);
-  console.log("Undefined:", notAssigned);
-  console.log(typeof name);
-  console.log(typeof studentAge);
-  console.log(typeof isStudent);
-
-  // =====================================================
-  // 3. ARITHMETIC OPERATORS
-  // =====================================================
-  const num1 = 56;
-  const num2 = 5;
-
-  const addition = num1 + num2;
-  const subtraction = num1 - num2;
-  const multiplication = num1 * num2;
-  const division = num1 / num2;
-  const remainder = num1 % num2;
-  const power = num1 ** 2;
-
-  console.log("Addition:", addition);
-  console.log("Subtraction:", subtraction);
-  console.log("Multiplication:", multiplication);
-  console.log("Division:", division);
-  console.log("Remainder:", remainder);
-  console.log("Power:", power);
-
-  /*
-    + Addition
-    - Subtraction
-    * Multiplication
-    / Division
-    % Remainder
-    ** Power
-  */
-
-  // =====================================================
-  // 4. ASSIGNMENT OPERATORS
-  // =====================================================
-  let score = 10;
-
-  score += 5;
-  console.log("score += 5:", score);
-
-  score -= 2;
-  console.log("score -= 2:", score);
-
-  score *= 2;
-  console.log("score *= 2:", score);
-
-  score /= 2;
-  console.log("score /= 2:", score);
-
-  /*
-    score += 5
-    means:
-    score = score + 5
-  */
-
-  // =====================================================
-  // 5. COMPARISON OPERATORS
-  // =====================================================
-  const marks = 75;
-
-  console.log("Greater:", marks > 50);
-  console.log("Less:", marks < 50);
-  console.log("Greater/equal:", marks >= 75);
-  console.log("Less/equal:", marks <= 75);
-  console.log("Equal:", marks === 75);
-  console.log("Not equal:", marks !== 75);
-
-  /*
-    > Greater than
-    < Less than
-    >= Greater than or equal
-    <= Less than or equal
-    === Strict equality
-    !== Strict inequality
-  */
-
-  // =====================================================
-  // 6. == VS ===
-  // =====================================================
-  console.log(5 == "5"); // true
-  console.log(5 === "5"); // false
-
-  /*
-    == checks value after type conversion
-    === checks value AND type
-    Prefer === in modern JavaScript.
-  */
-
-  // =====================================================
-  // 7. LOGICAL OPERATORS
-  // =====================================================
-  const myAge = 21;
-  const hasID = true;
-
-  // AND
-  console.log("AND:", myAge >= 18 && hasID);
-
-  // OR
-  const isAdmin = false;
-  const isTeacher = true;
-  console.log("OR:", isAdmin || isTeacher);
-
-  // NOT
-  const loggedIn = true;
-  console.log("NOT:", !loggedIn);
-
-  /*
-    && AND
-    || OR
-    ! NOT
-  */
-
-  // =====================================================
-  // 8. INCREMENT / DECREMENT
-  // =====================================================
-  let counter = 1;
-
-  counter++;
-  console.log("Increment:", counter);
-
-  counter++;
-  console.log("Increment:", counter);
-
-  counter--;
-  console.log("Decrement:", counter);
-
-  /*
-    counter++
-    means:
-    counter = counter + 1
-  */
-
-  // =====================================================
-  // Small helper component for a labeled value "card"
-  // =====================================================
-  const StatCard = ({ label, value, color = "indigo" }) => {
-    const colorMap = {
-      indigo: "bg-indigo-50 text-indigo-700 border-indigo-200",
-      emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      amber: "bg-amber-50 text-amber-700 border-amber-200",
-      rose: "bg-rose-50 text-rose-700 border-rose-200",
-    };
-
-    return (
-      <div
-        className={`flex flex-col justify-center rounded-xl border p-4 shadow-sm transition hover:shadow-md ${colorMap[color]}`}
-      >
-        <span className="text-xs font-medium uppercase tracking-wide opacity-70">
-          {label}
-        </span>
-        <span className="mt-1 text-lg font-semibold">{String(value)}</span>
-      </div>
-    );
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      setTasks(data);
+      setError("");
+    } catch (err) {
+      setError("Cannot connect to the server. Is the backend running?");
+    }
   };
 
-  // =====================================================
-  // RETURN JSX
-  // =====================================================
+  // ---------- 2. POST: add a new task ----------
+  const handleAddTask = async () => {
+    if (title.trim() === "") {
+      setError("Please type a task first!");
+      return;
+    }
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title }),
+      });
+
+      if (response.ok) {
+        setTitle("");
+        setError("");
+        fetchTasks(); // refresh the list from the database
+      } else {
+        const data = await response.json();
+        setError(data.message);
+      }
+    } catch (err) {
+      setError("Cannot connect to the server. Is the backend running?");
+    }
+  };
+
+  // ---------- 3. DELETE: remove a task ----------
+  const handleDeleteTask = async (id) => {
+    try {
+      await fetch(API_URL + "/" + id, { method: "DELETE" });
+      fetchTasks(); // refresh the list from the database
+    } catch (err) {
+      setError("Could not delete the task.");
+    }
+  };
+
+  // ---------- 4. PUT: edit a task ----------
+  const handleStartEdit = (task) => {
+    setEditingId(task._id);
+    setEditText(task.title);
+  };
+
+  const handleSaveEdit = async (id) => {
+    if (editText.trim() === "") {
+      setError("Task title cannot be empty.");
+      return;
+    }
+
+    try {
+      const response = await fetch(API_URL + "/" + id, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editText }),
+      });
+
+      if (response.ok) {
+        setEditingId(null);
+        setEditText("");
+        setError("");
+        fetchTasks();
+      } else {
+        const data = await response.json();
+        setError(data.message);
+      }
+    } catch (err) {
+      setError("Could not update the task.");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditText("");
+  };
+
+  // ---------- 5. PATCH (bonus): mark done / not done ----------
+  const handleToggleTask = async (id) => {
+    try {
+      await fetch(API_URL + "/" + id, { method: "PATCH" });
+      fetchTasks();
+    } catch (err) {
+      setError("Could not update the task.");
+    }
+  };
+
+  // Keyboard shortcuts
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleAddTask();
+    }
+  };
+
+  const handleEditKeyDown = (e, id) => {
+    if (e.key === "Enter") {
+      handleSaveEdit(id);
+    } else if (e.key === "Escape") {
+      handleCancelEdit();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-8">
-      <div className="mx-auto max-w-3xl">
-        {/* Header */}
-        <header className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-slate-800 sm:text-4xl">
-            JavaScript + React Basics
-          </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Variables, data types, operators — with live output below.
-          </p>
-        </header>
+    <div className="app">
+      <div className="container">
+        <h1 className="heading">Student Task Manager</h1>
 
-        {/* Variables & Data Types */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            Variables &amp; Data Types
-          </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <StatCard label="Name" value={name} color="indigo" />
-            <StatCard label="Age" value={studentAge} color="indigo" />
-            <StatCard label="Is Student" value={String(isStudent)} color="indigo" />
-            <StatCard label="Country (const)" value={country} color="indigo" />
-            <StatCard label="var userName" value={userName} color="indigo" />
-            <StatCard label="let age" value={age} color="indigo" />
-          </div>
-        </section>
+        <div className="input-section">
+          <input
+            type="text"
+            className="task-input"
+            placeholder="Enter task title..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <button className="add-btn" onClick={handleAddTask}>
+            Add Task
+          </button>
+        </div>
 
-        {/* Arithmetic Operators */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            Arithmetic Operators
-          </h2>
-          <p className="mb-4 text-sm text-slate-500">
-            num1 = {num1}, num2 = {num2}
-          </p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <StatCard label="Addition" value={addition} color="emerald" />
-            <StatCard label="Subtraction" value={subtraction} color="emerald" />
-            <StatCard label="Multiplication" value={multiplication} color="emerald" />
-            <StatCard label="Division" value={division} color="emerald" />
-            <StatCard label="Remainder" value={remainder} color="emerald" />
-            <StatCard label="Power" value={power} color="emerald" />
-          </div>
-        </section>
+        {error !== "" && <p className="error-message">{error}</p>}
 
-        {/* Assignment Operators */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            Assignment Operators
-          </h2>
-          <p className="text-sm text-slate-600">
-            Starting score: <span className="font-semibold">10</span> → after
-            +5, -2, *2, /2 ={" "}
-            <span className="font-semibold text-amber-600">{score}</span>
-          </p>
-        </section>
-
-        {/* Comparison Operators */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            Comparison Operators (marks = {marks})
-          </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <StatCard label="> 50" value={marks > 50} color="amber" />
-            <StatCard label="< 50" value={marks < 50} color="amber" />
-            <StatCard label=">= 75" value={marks >= 75} color="amber" />
-            <StatCard label="<= 75" value={marks <= 75} color="amber" />
-            <StatCard label="=== 75" value={marks === 75} color="amber" />
-            <StatCard label="!== 75" value={marks !== 75} color="amber" />
-          </div>
-        </section>
-
-        {/* == vs === */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            == vs ===
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard label='5 == "5"' value={5 == "5"} color="rose" />
-            <StatCard label='5 === "5"' value={5 === "5"} color="rose" />
-          </div>
-        </section>
-
-        {/* Logical Operators */}
-        <section className="mb-8 rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            Logical Operators
-          </h2>
-          <div className="grid grid-cols-3 gap-4">
-            <StatCard label="AND (&&)" value={myAge >= 18 && hasID} color="indigo" />
-            <StatCard label="OR (||)" value={isAdmin || isTeacher} color="indigo" />
-            <StatCard label="NOT (!)" value={!loggedIn} color="indigo" />
-          </div>
-        </section>
-
-        {/* Increment / Decrement */}
-        <section className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">
-            Increment / Decrement
-          </h2>
-          <p className="text-sm text-slate-600">
-            Final counter value (1 → ++ → ++ → --):{" "}
-            <span className="font-semibold text-slate-800">{counter}</span>
-          </p>
-        </section>
-
-        <footer className="mt-10 text-center text-xs text-slate-400">
-          Open the browser console to see every logged step.
-        </footer>
+        {tasks.length === 0 ? (
+          <p className="empty-message">No tasks available. Add your first task!</p>
+        ) : (
+          <ul className="task-list">
+            {tasks.map((task) => (
+              <li key={task._id} className="task-item">
+                {editingId === task._id ? (
+                  // ----- EDIT MODE -----
+                  <>
+                    <input
+                      type="text"
+                      className="edit-input"
+                      value={editText}
+                      autoFocus
+                      onChange={(e) => setEditText(e.target.value)}
+                      onKeyDown={(e) => handleEditKeyDown(e, task._id)}
+                    />
+                    <div className="button-group">
+                      <button
+                        className="save-btn"
+                        onClick={() => handleSaveEdit(task._id)}
+                      >
+                        Save
+                      </button>
+                      <button className="cancel-btn" onClick={handleCancelEdit}>
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // ----- NORMAL MODE -----
+                  <>
+                    <div className="task-left">
+                      <input
+                        type="checkbox"
+                        className="task-checkbox"
+                        checked={task.completed}
+                        onChange={() => handleToggleTask(task._id)}
+                      />
+                      <span
+                        className={
+                          task.completed ? "task-title task-done" : "task-title"
+                        }
+                      >
+                        {task.title}
+                      </span>
+                    </div>
+                    <div className="button-group">
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleStartEdit(task)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteTask(task._id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
